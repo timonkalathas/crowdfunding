@@ -40,6 +40,30 @@ function App() {
     }
   };
 
+  const switchWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const accounts = await provider.send("eth_requestAccounts", []);
+        setAccount(accounts[0]);
+
+        const crowdfundingContract = new ethers.Contract(
+          contractAddress,
+          crowdfundingABI.abi,
+          signer
+        );
+        setContract(crowdfundingContract);
+
+        fetchCampaigns(crowdfundingContract);
+      } catch (error) {
+        console.error("Error switching wallet:", error);
+      }
+    } else {
+      alert("Please install MetaMask!");
+    }
+  };
+
   const fetchCampaigns = async (contract) => {
     try {
       const totalCampaigns = await contract.totalCampaigns();
@@ -105,6 +129,7 @@ function App() {
       <h1>Blockchain Crowdfunding</h1>
       <p>Connected Account: {account ? account : "Not connected"}</p>
       {!account && <button onClick={connectWallet}>Connect Wallet</button>}
+      {account && <button onClick={switchWallet}>Switch Account</button>}
 
       {account && (
         <div>
